@@ -7,16 +7,17 @@ const game = {
 };
 
 // Enemies our player must avoid
-var Enemy = function(x = 0, y = 83-20, speed = 50, sprite = 'images/enemy-bug.png' ) {
+var Enemy = function( row = 1, speed = 50) {
     // Variables applied to each of our instances go here,
     // we've provided one for you to get started
-    this.x = x;
-    this.y = y;
+    this.x =  -100 * (Math.random() + 1);
+    this.row = row;
+    this.y = row * 83 - 20;
     this.speed = speed;
 
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
-    this.sprite = sprite;
+    this.sprite = 'images/enemy-bug.png';
 };
 
 // Update the enemy's position, required method for game
@@ -40,16 +41,39 @@ Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-const Player = function(x = 202, y = 380) {
-    Enemy.call(this, x, y, 0);
+// Checking the collision with the player
+Enemy.prototype.checkCollisions = function(player) {
+    // different row !
+    if (this.row != player.row)
+        return false;
+    // conflicting x position including transparent graphics
+    if (this.x + 98 > player.x + 18 && player.x + 84 > this.x + 2)
+        return true;
+    // no collision !!
+    return false;
+};
+
+const Player = function() {
+    Enemy.call(this, 5, 0);
+    this.x = 202;
     this.sprite = 'images/char-boy.png'
 };
 Player.prototype = Object.create(Enemy.prototype);
 Player.prototype.constructor = Player;
 Player.prototype.update = function() {};
 Player.prototype.handleInput = function(way) {
-    if (way == 'up')
-        this.y -=20;
+
+    if (way == 'up' && this.row > 0) {
+        this.y -= 83;
+        this.row--;
+    } else if (way == 'down' && this.row < 5) {
+        this.y += 83;
+        this.row++;
+    } else if (way == 'left' && this.x > 50) {
+        this.x -= 101;
+    } else if (way == 'right' && this.x < 350) {
+        this.x += 101;
+    }
 };
 
 // Now write your own player class
@@ -61,8 +85,9 @@ Player.prototype.handleInput = function(way) {
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
 const allEnemies = new Array(
-    new Enemy(),
-    new Enemy(101, 83*2-20, 80)
+    new Enemy(1),
+    new Enemy(2, 75),
+    new Enemy(3, 60)
 );
 
 const player = new Player();

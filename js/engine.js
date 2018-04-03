@@ -23,7 +23,8 @@ var Engine = (function(global) {
         win = global.window,
         canvas = doc.createElement('canvas'),
         ctx = canvas.getContext('2d'),
-        lastTime;
+        lastTime,
+        collision;
 
     canvas.width = 505;
     canvas.height = 606;
@@ -91,10 +92,16 @@ var Engine = (function(global) {
      * render methods.
      */
     function updateEntities(dt) {
+        player.update();
+        collision = false;    
         allEnemies.forEach(function(enemy) {
             enemy.update(dt);
+            collision = collision || enemy.checkCollisions(player);
+            // one collision is enough !!
         });
-        player.update();
+        if (collision) {
+            console.log('collision! on = ' + dt);
+        }
     }
 
     /* This function initially draws the "game level", it will then call
