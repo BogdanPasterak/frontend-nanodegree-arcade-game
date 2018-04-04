@@ -1,9 +1,12 @@
 // Variables used in the game
 const game = {
     widthCanvas: 505,
-    levelPlayer: 0,
-    time: 0,
-    intervalID: undefined
+    level: 1,
+    live: 3,
+    time: 2 * 60 * 10,
+    go: false,
+    permit: true,
+    timerID: undefined
 };
 
 // Enemies our player must avoid
@@ -17,7 +20,7 @@ var Enemy = function( row = 1, speed = 50) {
 
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
-    this.sprite = 'images/enemy-bug.png';
+    this.sprite = (speed > 0) ? 'images/enemy-bug.png' : 'images/enemy-gub.png';
 };
 
 // Update the enemy's position, required method for game
@@ -26,13 +29,13 @@ Enemy.prototype.update = function(dt) {
     // You should multiply any movement by the dt parameter
     // which will ensure the game runs at the same speed for
     // all computers.
-    // only enemy
-    if ( dt != undefined ) {
-        this.x += this.speed * dt;
-        // if outside the canvas
-        if (this.x > game.widthCanvas ) {
-            this.x = -100 * (Math.random() + 1);
-        }
+    this.x += this.speed * dt;
+    // if outside the canvas
+    if (this.x > game.widthCanvas && this.speed > 0 ) {
+        this.x = -100 - Math.random() * 200;
+    }
+    if (this.x < -100 && this.speed < 0 ) {
+        this.x = game.widthCanvas + Math.random() * 200;
     }
 };
 
@@ -55,24 +58,38 @@ Enemy.prototype.checkCollisions = function(player) {
 
 const Player = function() {
     Enemy.call(this, 5, 0);
-    this.x = 202;
+    this.col = 2;
     this.sprite = 'images/char-boy.png'
 };
 Player.prototype = Object.create(Enemy.prototype);
 Player.prototype.constructor = Player;
-Player.prototype.update = function() {};
+Player.prototype.update = function() {
+    this.x = this.col * 101;
+    this.y = this.row * 83 - 20;
+};
+Player.prototype.restart = function() {
+    this.row = 5;
+    this.col = 2;
+};
 Player.prototype.handleInput = function(way) {
 
-    if (way == 'up' && this.row > 0) {
-        this.y -= 83;
-        this.row--;
-    } else if (way == 'down' && this.row < 5) {
-        this.y += 83;
-        this.row++;
-    } else if (way == 'left' && this.x > 50) {
-        this.x -= 101;
-    } else if (way == 'right' && this.x < 350) {
-        this.x += 101;
+    if (game.permit) {
+        startTimer();
+        if (way == 'up' && this.row > 0) {
+            this.row--;
+        } else if (way == 'down' && this.row < 5) {
+            this.row++;
+        } else if (way == 'left' && this.col > 0) {
+            this.col--;
+        } else if (way == 'right' && this.col < 4) {
+            this.col++;
+        }
+    } else {
+        if (way == 'space') {
+            console.log('space');
+        } else if ( way == 'enter') {
+            console.log('enter');
+        }
     }
 };
 
@@ -86,18 +103,18 @@ Player.prototype.handleInput = function(way) {
 // Place the player object in a variable called player
 const allEnemies = new Array(
     new Enemy(1),
-    new Enemy(2, 75),
+    new Enemy(2, -75),
     new Enemy(3, 60)
 );
 
 const player = new Player();
 
-
-
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
 document.addEventListener('keyup', function(e) {
     var allowedKeys = {
+        13: 'enter',
+        32: 'space',
         37: 'left',
         38: 'up',
         39: 'right',
@@ -107,3 +124,52 @@ document.addEventListener('keyup', function(e) {
     player.handleInput(allowedKeys[e.keyCode]);
 });
 
+// TODO: Enemies initialization
+const initEnemies = () => {
+    ;
+};
+
+// TODO: Converts the number to a Roman numeral
+const integerToRoman = (num) => {
+    if (typeof num !== 'number') 
+    return false; 
+
+    var digits = String(+num).split(""),
+    key = ["","C","CC","CCC","CD","D","DC","DCC","DCCC","CM",
+        "","X","XX","XXX","XL","L","LX","LXX","LXXX","XC",
+        "","I","II","III","IV","V","VI","VII","VIII","IX"],
+    roman_num = "",
+
+    i = 3;
+    while (i--)
+        roman_num = (key[+digits.pop() + (i * 10)] || "") + roman_num;
+    return Array(+digits.join("") + 1).join("M") + roman_num;
+};
+
+// TODO: Time counting timer
+const timeToString = () => {
+    let string = (game.time > 590) ? ((game.time / 600) | 0) + ':' : '0:';
+    string += (game.time % 600 < 10) ? '0' : '';  
+    string += ((game.time % 600) / 10) | 0;  
+
+    return string;
+};
+
+const startTimer = () => {
+    if (game.timerID == undefined ){
+        game.timerID = setInterval(function() {
+            if (game.time > 0) {
+                game.time--;
+            }
+        }, 100);
+        game.go = true;
+    }
+};
+
+const stopTimer = () => {
+    if (game.timerID != undefined) {
+        clearInterval(game.timerID);
+        game.timerID = undefined;
+        game.go = false;
+    }
+};

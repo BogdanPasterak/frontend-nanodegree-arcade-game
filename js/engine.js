@@ -93,6 +93,9 @@ var Engine = (function(global) {
      */
     function updateEntities(dt) {
         player.update();
+        if (player.row == 0) {
+            nextLevel();
+        }
         collision = false;    
         allEnemies.forEach(function(enemy) {
             enemy.update(dt);
@@ -100,9 +103,24 @@ var Engine = (function(global) {
             // one collision is enough !!
         });
         if (collision) {
-            console.log('collision! on = ' + dt);
+            stop();
         }
     }
+
+    // Stop all enemy for test collision
+    function stop() {
+        allEnemies.forEach(function(enemy) {
+            enemy.speed = 0;
+        });
+        stopTimer();
+    }
+
+    // Next level
+    function nextLevel() {
+        stopTimer()
+        player.restart();
+        game.level++;
+    } 
 
     /* This function initially draws the "game level", it will then call
      * the renderEntities function. Remember, this function is called every
@@ -145,6 +163,7 @@ var Engine = (function(global) {
                 ctx.drawImage(Resources.get(rowImages[row]), col * 101, row * 83);
             }
         }
+        renderInfo();
 
         renderEntities();
     }
@@ -164,6 +183,36 @@ var Engine = (function(global) {
         player.render();
     }
 
+    // TODO: Displays the results of the game
+    function renderInfo() {
+        if (game.go){
+            ctx.strokeStyle = 'rgba(180, 50, 210, 1.0)';
+            ctx.shadowColor = 'rgba(100, 0, 130, 0.6)';
+        } else {
+            ctx.strokeStyle = 'rgba(20, 120, 50, 1.0)';
+            ctx.shadowColor = 'rgba(0, 80, 30, 0.6)';
+        }
+        ctx.lineWidth = 4;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 3;
+        ctx.shadowBlur = 3;
+        ctx.strokeRect(2, 4, 115, 40);
+        ctx.strokeRect(130, 4, 182, 40);
+        ctx.strokeRect(325, 4, 175, 40);
+        for (let i = 0; i < game.live; i++) {
+            ctx.drawImage(Resources.get('images/Heart-mini.png'), 10 + i * 35, 9);
+        }
+        ctx.font = '25px serif';
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgb(0, 0, 0)';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+        ctx.textAlign = 'center';
+        ctx.strokeText("Level: " + integerToRoman(game.level), 225, 33);
+        ctx.strokeText("Time: " + timeToString(), 415, 33);
+
+    }
+
+
     /* This function does nothing but it could have been a good place to
      * handle game reset states - maybe a new game menu or a game over screen
      * those sorts of things. It's only called once by the init() method.
@@ -181,7 +230,9 @@ var Engine = (function(global) {
         'images/water-block.png',
         'images/grass-block.png',
         'images/enemy-bug.png',
-        'images/char-boy.png'
+        'images/enemy-gub.png',
+        'images/char-boy.png',
+        'images/Heart-mini.png'
     ]);
     Resources.onReady(init);
 
