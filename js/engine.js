@@ -66,6 +66,7 @@ var Engine = (function(global) {
      */
     function init() {
         reset();
+        initEnemies();
         lastTime = Date.now();
         main();
     }
@@ -103,7 +104,7 @@ var Engine = (function(global) {
             // one collision is enough !!
         });
         if (collision) {
-            stop();
+            lossOfLife();
         }
     }
 
@@ -112,13 +113,30 @@ var Engine = (function(global) {
         allEnemies.forEach(function(enemy) {
             enemy.speed = 0;
         });
-        stopTimer();
+    }
+
+    //
+    function lossOfLife(){
+        stopTimer()
+        game.live--;
+        if (game.live < 0) {
+            stop();
+            game.permit = false;
+        } else {
+            player.restart();
+        }
     }
 
     // Next level
     function nextLevel() {
         stopTimer()
         player.restart();
+        allEnemies.forEach(function(enemy) {
+            enemy.accelerate();
+        });
+        if (game.level % 5 == 0) {
+            allEnemies.push(new Enemy());
+        }
         game.level++;
     } 
 
@@ -207,7 +225,7 @@ var Engine = (function(global) {
         ctx.strokeStyle = 'rgb(0, 0, 0)';
         ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
         ctx.textAlign = 'center';
-        ctx.strokeText("Level: " + integerToRoman(game.level), 225, 33);
+        ctx.strokeText("Level: " + integerToRoman(game.level), 223, 33);
         ctx.strokeText("Time: " + timeToString(), 415, 33);
 
     }

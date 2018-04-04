@@ -10,17 +10,25 @@ const game = {
 };
 
 // Enemies our player must avoid
-var Enemy = function( row = 1, speed = 50) {
+var Enemy = function( row = 6 ) {
     // Variables applied to each of our instances go here,
     // we've provided one for you to get started
-    this.x =  -100 * (Math.random() + 1);
+    // Random speed (minimum 100) depends on the level ( + or - )
+    this.speed = (100 + (Math.random() * 15 * game.level)) * ((Math.random() > 0.5) ? 1 : -1);
+    // Starting off-screen position
+    this.x = (this.speed > 0) ? (-100 - Math.random() * 200) : (game.widthCanvas + Math.random() * 200);
+    // 6 -> draw the row    
+    if (row == 6 ) {
+        row = ((Math.random() * 3) | 0 ) + 1;
+    }
     this.row = row;
+    // calk y position
     this.y = row * 83 - 20;
-    this.speed = speed;
 
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
-    this.sprite = (speed > 0) ? 'images/enemy-bug.png' : 'images/enemy-gub.png';
+    // left or right
+    this.sprite = (this.speed > 0) ? 'images/enemy-bug.png' : 'images/enemy-gub.png';
 };
 
 // Update the enemy's position, required method for game
@@ -56,8 +64,17 @@ Enemy.prototype.checkCollisions = function(player) {
     return false;
 };
 
+// Faster
+Enemy.prototype.accelerate = function() {
+    if (this.speed > 0) {
+        this.speed = 100 + (Math.random() * 15 * game.level);
+    } else {
+        this.speed = -100 - (Math.random() * 15 * game.level);
+    }
+};
+
 const Player = function() {
-    Enemy.call(this, 5, 0);
+    Enemy.call(this, 5);
     this.col = 2;
     this.sprite = 'images/char-boy.png'
 };
@@ -101,11 +118,19 @@ Player.prototype.handleInput = function(way) {
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
-const allEnemies = new Array(
-    new Enemy(1),
-    new Enemy(2, -75),
-    new Enemy(3, 60)
-);
+const allEnemies = new Array();
+
+// TODO: Enemies initialization
+const initEnemies = () => {
+    // Clear if there are instances
+    while (allEnemies.length > 0) {
+        allEnemies.pop();
+    }
+    // minimum 3 enemies on 3 road
+    for ( let i = 0; i < game.level + 2; i++) {
+        allEnemies.push( new Enemy((i < 3) ? i + 1 : 6));
+    }
+};
 
 const player = new Player();
 
@@ -123,11 +148,6 @@ document.addEventListener('keyup', function(e) {
 
     player.handleInput(allowedKeys[e.keyCode]);
 });
-
-// TODO: Enemies initialization
-const initEnemies = () => {
-    ;
-};
 
 // TODO: Converts the number to a Roman numeral
 const integerToRoman = (num) => {
@@ -149,7 +169,7 @@ const integerToRoman = (num) => {
 // TODO: Time counting timer
 const timeToString = () => {
     let string = (game.time > 590) ? ((game.time / 600) | 0) + ':' : '0:';
-    string += (game.time % 600 < 10) ? '0' : '';  
+    string += (game.time % 600 < 100) ? '0' : '';  
     string += ((game.time % 600) / 10) | 0;  
 
     return string;
