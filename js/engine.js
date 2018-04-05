@@ -93,9 +93,20 @@ var Engine = (function(global) {
      */
     function updateEntities(dt) {
         player.update();
-        if (player.row == 0) {
+        // If the player reached the water
+        if (player.row == 0 && game.permit) {
             nextLevel();
         }
+        gems.forEach(function(gem){
+            if (gem.checkTaking(player)) {
+                if (gem.sort == 3) {
+                    game.live += (game.live < 3);
+                } else {
+                    game.gemsOGB[gem.sort]++;
+                }
+                gems.delete(gem);
+            }
+        });
         collision = false;    
         // checkCollisions();
         allEnemies.forEach(function(enemy) {
@@ -129,7 +140,9 @@ var Engine = (function(global) {
     // Next level
     function nextLevel() {
         stopTimer()
-        player.restart();
+        game.permit = false;
+        player.blink = 7;
+        startBlink();
         allEnemies.forEach(function(enemy) {
             enemy.accelerate();
         });
@@ -193,28 +206,35 @@ var Engine = (function(global) {
         /* Loop through all of the objects within the allEnemies array and call
          * the render function you have defined.
          */
+        for (const gem of gems) {
+            gem.render();
+        }
         player.render();
         allEnemies.forEach(function(enemy) {
             enemy.render();
         });
-
     }
 
     // TODO: Displays the results of the game
     function renderInfo() {
         if (game.go){
             ctx.strokeStyle = 'rgba(180, 50, 210, 1.0)';
+            ctx.fillStyle = 'rgba(180, 50, 210, 0.2)';
             ctx.shadowColor = 'rgba(100, 0, 130, 0.6)';
         } else {
             ctx.strokeStyle = 'rgba(20, 120, 50, 1.0)';
+            ctx.fillStyle = 'rgba(20, 120, 50, 0.2)';
             ctx.shadowColor = 'rgba(0, 80, 30, 0.6)';
         }
         ctx.lineWidth = 4;
         ctx.shadowOffsetX = 1;
         ctx.shadowOffsetY = 3;
         ctx.shadowBlur = 3;
+        ctx.fillRect(2, 4, 115, 40);
         ctx.strokeRect(2, 4, 115, 40);
+        ctx.fillRect(130, 4, 182, 40);
         ctx.strokeRect(130, 4, 182, 40);
+        ctx.fillRect(325, 4, 175, 40);
         ctx.strokeRect(325, 4, 175, 40);
         for (let i = 0; i < game.live; i++) {
             ctx.drawImage(Resources.get('images/Heart-mini.png'), 10 + i * 35, 9);
@@ -243,6 +263,10 @@ var Engine = (function(global) {
      * all of these images are properly loaded our game will start.
      */
     Resources.load([
+        'images/Gem Blue.png',
+        'images/Gem Green.png',
+        'images/Gem Orange.png',
+        'images/Heart.png',
         'images/stone-block.png',
         'images/water-block.png',
         'images/grass-block.png',

@@ -3,15 +3,16 @@ const game = {
     widthCanvas: 505,
     level: 1,
     live: 3,
-    time: 2 * 60 * 10,
+    time: 3 * 60 * 10,
     go: false,
     permit: true,
+    gemsOGB: [0, 0, 0],
     blinkID: undefined,
     timerID: undefined
 };
 
 // Enemies our player must avoid
-var Enemy = function( row = 6 ) {
+const Enemy = function( row = 6 ) {
     // Variables applied to each of our instances go here,
     // we've provided one for you to get started
     // Random speed (minimum 100) depends on the level ( + or - )
@@ -131,12 +132,31 @@ Player.prototype.handleInput = function(way) {
 // Now write your own player class
 // This class requires an update(), render() and
 // a handleInput() method.
+const Gem = function() {
+    const sprites = ['images/Gem Orange.png', 'images/Gem Blue.png', 'images/Gem Green.png', 'images/Heart.png'];
 
+    this.sort = (Math.random() < 0.4) + (Math.random() < 0.4) + (Math.random() < 0.4);
+    this.sprite = sprites[this.sort];
+    this.row = ((Math.random() * 4) | 0) +1;
+    this.col = (Math.random() * 5) | 0;
+};
+
+Gem.prototype.render = function() {
+    ctx.drawImage(Resources.get(this.sprite), this.col * 101, this.row * 83);
+};
+
+Gem.prototype.checkTaking = function(player) {
+    return (player.row == this.row && player.col == this.col);
+};
 
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
 const allEnemies = new Array();
+
+const player = new Player();
+
+const gems = new Set();
 
 // TODO: Enemies initialization
 const initEnemies = () => {
@@ -149,8 +169,6 @@ const initEnemies = () => {
         allEnemies.push( new Enemy((i < 3) ? i + 1 : 6));
     }
 };
-
-const player = new Player();
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
@@ -200,6 +218,10 @@ const startTimer = () => {
         game.timerID = setInterval(function() {
             if (game.time > 0) {
                 game.time--;
+            }
+            if (Math.random() < 0.07 / (gems.size + 1)) {
+                gems.add(new Gem());
+                console.log('Jest  ' + gems.size);
             }
         }, 100);
         game.go = true;
