@@ -132,9 +132,6 @@ var Engine = (function(global) {
         game.live--;
         game.permit = false;
         startBlink();
-        if (game.live < 0) {
-            stop();
-        } 
     }
 
     // Next level
@@ -196,6 +193,10 @@ var Engine = (function(global) {
         renderInfo();
 
         renderEntities();
+
+        if (! game.permit && game.blinkID == undefined) {
+            renderScore();
+        }
     }
 
     /* This function is called by the render function and is called on each game
@@ -246,7 +247,18 @@ var Engine = (function(global) {
         ctx.textAlign = 'center';
         ctx.strokeText("Level: " + integerToRoman(game.level), 223, 33);
         ctx.strokeText("Time: " + timeToString(), 415, 33);
+    }
 
+    function renderScore() {
+        ctx.strokeStyle = 'rgba(255, 45, 45, 0.7)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.lineWidth = 6;
+        ctx.fillRect(30, 80, 445, 470);
+        ctx.strokeRect(30, 80, 445, 470);
+        ctx.font = '60px serif';
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgb(0, 0, 0)';
+        ctx.strokeText('Congratulations !', 256, 140);
     }
 
 
