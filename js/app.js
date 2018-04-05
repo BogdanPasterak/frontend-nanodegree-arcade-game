@@ -6,6 +6,7 @@ const game = {
     time: 2 * 60 * 10,
     go: false,
     permit: true,
+    blinkID: undefined,
     timerID: undefined
 };
 
@@ -14,7 +15,7 @@ var Enemy = function( row = 6 ) {
     // Variables applied to each of our instances go here,
     // we've provided one for you to get started
     // Random speed (minimum 100) depends on the level ( + or - )
-    this.speed = (100 + (Math.random() * 15 * game.level)) * ((Math.random() > 0.5) ? 1 : -1);
+    this.speed = (100 + (Math.random() * 10 * game.level)) * ((Math.random() > 0.5) ? 1 : -1);
     // Starting off-screen position
     this.x = (this.speed > 0) ? (-100 - Math.random() * 200) : (game.widthCanvas + Math.random() * 200);
     // 6 -> draw the row    
@@ -24,7 +25,8 @@ var Enemy = function( row = 6 ) {
     this.row = row;
     // calk y position
     this.y = row * 83 - 20;
-
+    // after collosion number blink
+    this.blink = 0;
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
     // left or right
@@ -58,8 +60,12 @@ Enemy.prototype.checkCollisions = function(player) {
     if (this.row != player.row)
         return false;
     // conflicting x position including transparent graphics
-    if (this.x + 98 > player.x + 18 && player.x + 84 > this.x + 2)
+    if (this.x + 98 > player.x + 19 && player.x + 81 > this.x + 2 && game.permit){
+        // the number of winks
+        this.blink = 14;
+        player.blink = 15;
         return true;
+    }
     // no collision !!
     return false;
 };
@@ -67,29 +73,40 @@ Enemy.prototype.checkCollisions = function(player) {
 // Faster
 Enemy.prototype.accelerate = function() {
     if (this.speed > 0) {
-        this.speed = 100 + (Math.random() * 15 * game.level);
+        this.speed = 100 + (Math.random() * 10 * game.level);
     } else {
-        this.speed = -100 - (Math.random() * 15 * game.level);
+        this.speed = -100 - (Math.random() * 10 * game.level);
     }
 };
 
+// An Enemy-based -> Player
 const Player = function() {
     Enemy.call(this, 5);
     this.col = 2;
-    this.sprite = 'images/char-boy.png'
+    this.sprite = 'images/char-boy.png';
 };
+
+// Inheritance of the prototype
 Player.prototype = Object.create(Enemy.prototype);
+
+// Own construktor
 Player.prototype.constructor = Player;
+
+// Overriding update
 Player.prototype.update = function() {
     this.x = this.col * 101;
     this.y = this.row * 83 - 20;
 };
+
+// Set on start position
 Player.prototype.restart = function() {
     this.row = 5;
     this.col = 2;
 };
-Player.prototype.handleInput = function(way) {
 
+// Keyboard support, player moves
+Player.prototype.handleInput = function(way) {
+    // if game
     if (game.permit) {
         startTimer();
         if (way == 'up' && this.row > 0) {
@@ -101,6 +118,7 @@ Player.prototype.handleInput = function(way) {
         } else if (way == 'right' && this.col < 4) {
             this.col++;
         }
+    // after game
     } else {
         if (way == 'space') {
             console.log('space');
@@ -126,7 +144,7 @@ const initEnemies = () => {
     while (allEnemies.length > 0) {
         allEnemies.pop();
     }
-    // minimum 3 enemies on 3 road
+    // minimum 3 enemies on 3 road, the rest randomly
     for ( let i = 0; i < game.level + 2; i++) {
         allEnemies.push( new Enemy((i < 3) ? i + 1 : 6));
     }
@@ -155,18 +173,19 @@ const integerToRoman = (num) => {
     return false; 
 
     var digits = String(+num).split(""),
-    key = ["","C","CC","CCC","CD","D","DC","DCC","DCCC","CM",
-        "","X","XX","XXX","XL","L","LX","LXX","LXXX","XC",
-        "","I","II","III","IV","V","VI","VII","VIII","IX"],
+    key = [ "","C","CC","CCC","CD","D","DC","DCC","DCCC","CM",
+            "","X","XX","XXX","XL","L","LX","LXX","LXXX","XC",
+            "","I","II","III","IV","V","VI","VII","VIII","IX"],
     roman_num = "",
 
     i = 3;
-    while (i--)
+    while (i--) {
         roman_num = (key[+digits.pop() + (i * 10)] || "") + roman_num;
+    }
     return Array(+digits.join("") + 1).join("M") + roman_num;
 };
 
-// TODO: Time counting timer
+// TODO: Change time to string
 const timeToString = () => {
     let string = (game.time > 590) ? ((game.time / 600) | 0) + ':' : '0:';
     string += (game.time % 600 < 100) ? '0' : '';  
@@ -175,6 +194,7 @@ const timeToString = () => {
     return string;
 };
 
+// TODO: Countdown to zero
 const startTimer = () => {
     if (game.timerID == undefined ){
         game.timerID = setInterval(function() {
@@ -186,6 +206,7 @@ const startTimer = () => {
     }
 };
 
+// TODO: Stop counting
 const stopTimer = () => {
     if (game.timerID != undefined) {
         clearInterval(game.timerID);
@@ -193,3 +214,34 @@ const stopTimer = () => {
         game.go = false;
     }
 };
+
+// TODO: flash characters after a collision
+const startBlink = () => {
+    if (game.blinkID == undefined ){
+        game.blinkID = setInterval(function() {
+            allEnemies.forEach(function(enemy) {
+                if (enemy.blink) {
+                    enemy.blink--;
+                    if (enemy.blink){
+                        enemy.sprite = enemy.sprite.slice(0, 16) + ((enemy.blink % 2) ? '-even.png' : '-odd.png');
+                    } else {
+                        enemy.sprite = enemy.sprite.slice(0, 16) + '.png';
+                    }
+                }
+            });
+            player.blink--;
+            if (player.blink) {
+                player.sprite = player.sprite.slice(0, 15) + ((player.blink % 2) ? '-even.png' : '-odd.png');
+            } else {
+                player.sprite = 'images/char-boy.png';
+                player.restart();
+                clearInterval(game.blinkID);
+                game.blinkID = undefined;
+                if (game.live >= 0) {
+                    game.permit = true;
+                }
+            }
+        }, 150);
+    }
+};
+
