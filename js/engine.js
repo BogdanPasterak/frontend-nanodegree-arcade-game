@@ -255,6 +255,7 @@ var Engine = (function(global) {
         ctx.lineWidth = 6;
         ctx.fillRect(30, 80, 445, 470);
         ctx.strokeRect(30, 80, 445, 470);
+        ctx.strokeRect(50, 390, 405, 140);
         ctx.font = '60px serif';
         ctx.lineWidth = 3;
         ctx.strokeStyle = 'rgb(0, 0, 0)';
@@ -263,6 +264,21 @@ var Engine = (function(global) {
         ctx.lineWidth = 2;
         ctx.font = '45px serif';
         ctx.strokeText('Your collection:', 256, 200);
+        if (game.live == -1) {
+            ctx.strokeText('Try again', 256, 440);
+            ctx.strokeText('Press Space or Enter', 256, 500);
+            if (game.next != ''){
+                reset();
+            }
+        } else {
+            ctx.strokeText('Press Enter to restart', 256, 440);
+            ctx.strokeText('or Space to continue', 256, 500);
+            if (game.next == 'space') {
+                continuation();
+            } else if (game.next == 'enter') {
+                reset();
+            }
+        }
         ctx.drawImage(Resources.get('images/Gem Green.png'), 70, 150);
         ctx.drawImage(Resources.get('images/Gem Blue.png'), 70, 200);
         ctx.drawImage(Resources.get('images/Gem Orange.png'), 70, 250);
@@ -274,19 +290,6 @@ var Engine = (function(global) {
         ctx.strokeText('Blue   Gems:   ' + game.gemsOGB[2], 180, 300);
         ctx.strokeText('Orange Gems: ' + game.gemsOGB[0], 180, 350);
 
-        if (game.live == -1) {
-
-            if (game.next != ''){
-                reset();
-            }
-        } else {
-
-            if (game.next == 'space') {
-                continuation();
-            } else if (game.next == 'enter') {
-                reset();
-            }
-        }
     }
 
 
@@ -300,6 +303,8 @@ var Engine = (function(global) {
         game.live = 3;
         game.time = 3 * 60 * 10;
         game.gemsOGB = [0, 0, 0];
+        initEnemies();
+        gems.clear();
     }
 
     function continuation() {
