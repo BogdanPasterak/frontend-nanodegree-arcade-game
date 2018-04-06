@@ -188,8 +188,8 @@ document.addEventListener('keyup', function(e) {
 
 // TODO: Converts the number to a Roman numeral
 const integerToRoman = (num) => {
-    if (typeof num !== 'number') 
-        return false; 
+    if (typeof num !== 'number')
+        return false;
 
     var digits = String(+num).split(""),
     key = [ "","C","CC","CCC","CD","D","DC","DCC","DCCC","CM",
@@ -207,8 +207,8 @@ const integerToRoman = (num) => {
 // TODO: Change time to string , format '0:35'
 const timeToString = () => {
     let string = (game.time > 590) ? ((game.time / 600) | 0) + ':' : '0:';
-    string += (game.time % 600 < 100) ? '0' : '';  
-    string += ((game.time % 600) / 10) | 0;  
+    string += (game.time % 600 < 100) ? '0' : '';
+    string += ((game.time % 600) / 10) | 0;
 
     return string;
 };
@@ -220,7 +220,7 @@ const startTimer = () => {
         game.timerID = setInterval(function() {
             if (game.time > 0) {
                 game.time--;
-            // if end time    
+            // if end time
             } else if (game.time == 0 && game.permit) {
                 game.permit = false;
                 player.blink = 7;
@@ -266,7 +266,7 @@ const startBlink = () => {
             player.blink--;
             if (player.blink) {
                 player.sprite = player.sprite.slice(0, 15) + ((player.blink % 2) ? '-even.png' : '-odd.png');
-            // end blinking            
+            // end blinking
             } else {
                 player.sprite = 'images/char-boy.png';
                 player.restart();
