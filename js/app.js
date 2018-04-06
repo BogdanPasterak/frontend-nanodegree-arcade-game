@@ -7,6 +7,7 @@ const game = {
     go: false,
     permit: true,
     gemsOGB: [0, 0, 0],
+    next: '',
     blinkID: undefined,
     timerID: undefined
 };
@@ -121,10 +122,8 @@ Player.prototype.handleInput = function(way) {
         }
     // after game
     } else {
-        if (way == 'space') {
-            console.log('space');
-        } else if ( way == 'enter') {
-            console.log('enter');
+        if (way == 'space' || way == 'enter' ) {
+            game.next = way;
         }
     }
 };
@@ -218,10 +217,14 @@ const startTimer = () => {
         game.timerID = setInterval(function() {
             if (game.time > 0) {
                 game.time--;
+            } else if (game.time == 0 && game.permit) {
+                game.permit = false;
+                player.blink = 7;
+                startBlink();
+                stopTimer();
             }
             if (Math.random() < 0.07 / (gems.size + 1)) {
                 gems.add(new Gem());
-                console.log('Jest  ' + gems.size);
             }
         }, 100);
         game.go = true;
@@ -259,7 +262,7 @@ const startBlink = () => {
                 player.restart();
                 clearInterval(game.blinkID);
                 game.blinkID = undefined;
-                if (game.live >= 0) {
+                if (game.live >= 0 && game.time) {
                     game.permit = true;
                 }
             }

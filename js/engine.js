@@ -228,7 +228,7 @@ var Engine = (function(global) {
             ctx.shadowColor = 'rgba(0, 80, 30, 0.6)';
         }
         ctx.lineWidth = 4;
-        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetX = 2;
         ctx.shadowOffsetY = 3;
         ctx.shadowBlur = 3;
         ctx.fillRect(2, 4, 115, 40);
@@ -256,9 +256,37 @@ var Engine = (function(global) {
         ctx.fillRect(30, 80, 445, 470);
         ctx.strokeRect(30, 80, 445, 470);
         ctx.font = '60px serif';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
         ctx.strokeStyle = 'rgb(0, 0, 0)';
+        ctx.shadowOffsetY = 5;
         ctx.strokeText('Congratulations !', 256, 140);
+        ctx.lineWidth = 2;
+        ctx.font = '45px serif';
+        ctx.strokeText('Your collection:', 256, 200);
+        ctx.drawImage(Resources.get('images/Gem Green.png'), 70, 150);
+        ctx.drawImage(Resources.get('images/Gem Blue.png'), 70, 200);
+        ctx.drawImage(Resources.get('images/Gem Orange.png'), 70, 250);
+        ctx.shadowOffsetY = 3;
+        ctx.font = '25px serif';
+        ctx.lineWidth = 1.5;
+        ctx.textAlign = 'start';
+        ctx.strokeText('Green  Gems:  ' + game.gemsOGB[1], 180, 250);
+        ctx.strokeText('Blue   Gems:   ' + game.gemsOGB[2], 180, 300);
+        ctx.strokeText('Orange Gems: ' + game.gemsOGB[0], 180, 350);
+
+        if (game.live == -1) {
+
+            if (game.next != ''){
+                reset();
+            }
+        } else {
+
+            if (game.next == 'space') {
+                continuation();
+            } else if (game.next == 'enter') {
+                reset();
+            }
+        }
     }
 
 
@@ -267,7 +295,18 @@ var Engine = (function(global) {
      * those sorts of things. It's only called once by the init() method.
      */
     function reset() {
-        // noop
+        continuation();
+        game.level = 1;
+        game.live = 3;
+        game.time = 3 * 60 * 10;
+        game.gemsOGB = [0, 0, 0];
+    }
+
+    function continuation() {
+        game.time = 2 * 60 * 10;
+        game.go = false;
+        game.permit = true;
+        game.next = '';
     }
 
     /* Go ahead and load all of the images we know we're going to need to
