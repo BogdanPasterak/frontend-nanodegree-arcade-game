@@ -3,13 +3,13 @@ const game = {
     widthCanvas: 505,
     level: 1,
     live: 3,
-    time: 3 * 60 * 10,
-    go: false,
-    permit: true,
-    gemsOGB: [0, 0, 0],
-    next: '',
-    blinkID: undefined,
-    timerID: undefined
+    time: 3 * 60 * 10,  // 3 min
+    go: false,          // during the game or pause
+    permit: true,       // can you play
+    gemsOGB: [0, 0, 0], // array of gems
+    next: '',           // key code
+    blinkID: undefined, // Interval blinkings
+    timerID: undefined  // Interval timer
 };
 
 // Enemies our player must avoid
@@ -20,10 +20,11 @@ const Enemy = function( row = 6 ) {
     this.speed = (100 + (Math.random() * 10 * game.level)) * ((Math.random() > 0.5) ? 1 : -1);
     // Starting off-screen position
     this.x = (this.speed > 0) ? (-100 - Math.random() * 200) : (game.widthCanvas + Math.random() * 200);
-    // 6 -> draw the row    
+    // 6 -> draw the row between 1 and 3
     if (row == 6 ) {
         row = ((Math.random() * 3) | 0 ) + 1;
     }
+    // path
     this.row = row;
     // calk y position
     this.y = row * 83 - 20;
@@ -62,17 +63,17 @@ Enemy.prototype.checkCollisions = function(player) {
     if (this.row != player.row)
         return false;
     // conflicting x position including transparent graphics
-    if (this.x + 98 > player.x + 19 && player.x + 81 > this.x + 2 && game.permit){
-        // the number of winks
+    if (this.x + 98 > player.x + 19 && player.x + 81 > this.x + 2 && game.permit) {
+        // the number of winks ( the player must have more odd numbers )
         this.blink = 14;
-        player.blink = 15;
+        player.blink = 17;
         return true;
     }
     // no collision !!
     return false;
 };
 
-// Faster
+// Faster depending on the level
 Enemy.prototype.accelerate = function() {
     if (this.speed > 0) {
         this.speed = 100 + (Math.random() * 10 * game.level);
@@ -84,6 +85,7 @@ Enemy.prototype.accelerate = function() {
 // An Enemy-based -> Player
 const Player = function() {
     Enemy.call(this, 5);
+    // moves on columns and rows (row from Enemy)
     this.col = 2;
     this.sprite = 'images/char-boy.png';
 };
@@ -128,22 +130,22 @@ Player.prototype.handleInput = function(way) {
     }
 };
 
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
+// Gems class, including extra life
 const Gem = function() {
     const sprites = ['images/Gem Orange.png', 'images/Gem Blue.png', 'images/Gem Green.png', 'images/Heart.png'];
-
+    // drawing of the object and position
     this.sort = (Math.random() < 0.4) + (Math.random() < 0.4) + (Math.random() < 0.4);
     this.sprite = sprites[this.sort];
     this.row = ((Math.random() * 4) | 0) +1;
     this.col = (Math.random() * 5) | 0;
 };
 
+// Render
 Gem.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.col * 101, this.row * 83);
 };
 
+// check if the player has taken
 Gem.prototype.checkTaking = function(player) {
     return (player.row == this.row && player.col == this.col);
 };
@@ -187,7 +189,7 @@ document.addEventListener('keyup', function(e) {
 // TODO: Converts the number to a Roman numeral
 const integerToRoman = (num) => {
     if (typeof num !== 'number') 
-    return false; 
+        return false; 
 
     var digits = String(+num).split(""),
     key = [ "","C","CC","CCC","CD","D","DC","DCC","DCCC","CM",
@@ -202,7 +204,7 @@ const integerToRoman = (num) => {
     return Array(+digits.join("") + 1).join("M") + roman_num;
 };
 
-// TODO: Change time to string
+// TODO: Change time to string , format '0:35'
 const timeToString = () => {
     let string = (game.time > 590) ? ((game.time / 600) | 0) + ':' : '0:';
     string += (game.time % 600 < 100) ? '0' : '';  
@@ -214,19 +216,23 @@ const timeToString = () => {
 // TODO: Countdown to zero
 const startTimer = () => {
     if (game.timerID == undefined ){
+        // start countdown
         game.timerID = setInterval(function() {
             if (game.time > 0) {
                 game.time--;
+            // if end time    
             } else if (game.time == 0 && game.permit) {
                 game.permit = false;
                 player.blink = 7;
                 startBlink();
                 stopTimer();
             }
+            // add sometimes gem
             if (Math.random() < 0.07 / (gems.size + 1)) {
                 gems.add(new Gem());
             }
         }, 100);
+        // time is running
         game.go = true;
     }
 };
@@ -243,10 +249,13 @@ const stopTimer = () => {
 // TODO: flash characters after a collision
 const startBlink = () => {
     if (game.blinkID == undefined ){
+        // start Interval
         game.blinkID = setInterval(function() {
+            // they are blinking Enemy if they were in a collision
             allEnemies.forEach(function(enemy) {
                 if (enemy.blink) {
                     enemy.blink--;
+                    // sprite change
                     if (enemy.blink){
                         enemy.sprite = enemy.sprite.slice(0, 16) + ((enemy.blink % 2) ? '-even.png' : '-odd.png');
                     } else {
@@ -257,11 +266,13 @@ const startBlink = () => {
             player.blink--;
             if (player.blink) {
                 player.sprite = player.sprite.slice(0, 15) + ((player.blink % 2) ? '-even.png' : '-odd.png');
+            // end blinking            
             } else {
                 player.sprite = 'images/char-boy.png';
                 player.restart();
                 clearInterval(game.blinkID);
                 game.blinkID = undefined;
+                // if he's still alive and he still has time
                 if (game.live >= 0 && game.time) {
                     game.permit = true;
                 }

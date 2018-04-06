@@ -97,10 +97,13 @@ var Engine = (function(global) {
         if (player.row == 0 && game.permit) {
             nextLevel();
         }
+        // Collect gems
         gems.forEach(function(gem){
             if (gem.checkTaking(player)) {
+                // if live
                 if (gem.sort == 3) {
                     game.live += (game.live < 3);
+                // if gem
                 } else {
                     game.gemsOGB[gem.sort]++;
                 }
@@ -114,6 +117,7 @@ var Engine = (function(global) {
             collision = collision || enemy.checkCollisions(player);
             // one collision is enough !!
         });
+        // if any collision
         if (collision && game.permit) {
             lossOfLife();
         }
@@ -126,7 +130,7 @@ var Engine = (function(global) {
         });
     }
 
-    //
+    // loss of life
     function lossOfLife(){
         stopTimer()
         game.live--;
@@ -140,9 +144,11 @@ var Engine = (function(global) {
         game.permit = false;
         player.blink = 7;
         startBlink();
+        // accelerate Enemy
         allEnemies.forEach(function(enemy) {
             enemy.accelerate();
         });
+        // add one every 5 levels
         if (game.level % 5 == 0) {
             allEnemies.push(new Enemy());
         }
@@ -190,10 +196,12 @@ var Engine = (function(global) {
                 ctx.drawImage(Resources.get(rowImages[row]), col * 101, row * 83);
             }
         }
+        // show info
         renderInfo();
 
         renderEntities();
 
+        // if end game
         if (! game.permit && game.blinkID == undefined) {
             renderScore();
         }
@@ -207,10 +215,12 @@ var Engine = (function(global) {
         /* Loop through all of the objects within the allEnemies array and call
          * the render function you have defined.
          */
-        for (const gem of gems) {
+        gems.forEach(function(gem){
             gem.render();
-        }
+        });
+
         player.render();
+
         allEnemies.forEach(function(enemy) {
             enemy.render();
         });
@@ -218,6 +228,7 @@ var Engine = (function(global) {
 
     // TODO: Displays the results of the game
     function renderInfo() {
+        // if time go ..
         if (game.go){
             ctx.strokeStyle = 'rgba(180, 50, 210, 1.0)';
             ctx.fillStyle = 'rgba(180, 50, 210, 0.2)';
@@ -227,6 +238,7 @@ var Engine = (function(global) {
             ctx.fillStyle = 'rgba(20, 120, 50, 0.2)';
             ctx.shadowColor = 'rgba(0, 80, 30, 0.6)';
         }
+        // boxes
         ctx.lineWidth = 4;
         ctx.shadowOffsetX = 2;
         ctx.shadowOffsetY = 3;
@@ -237,9 +249,11 @@ var Engine = (function(global) {
         ctx.strokeRect(130, 4, 182, 40);
         ctx.fillRect(325, 4, 175, 40);
         ctx.strokeRect(325, 4, 175, 40);
+        // live
         for (let i = 0; i < game.live; i++) {
             ctx.drawImage(Resources.get('images/Heart-mini.png'), 10 + i * 35, 9);
         }
+        // level and time
         ctx.font = '25px serif';
         ctx.lineWidth = 1;
         ctx.strokeStyle = 'rgb(0, 0, 0)';
@@ -249,6 +263,7 @@ var Engine = (function(global) {
         ctx.strokeText("Time: " + timeToString(), 415, 33);
     }
 
+    // ending board
     function renderScore() {
         ctx.strokeStyle = 'rgba(255, 45, 45, 0.7)';
         ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
@@ -270,6 +285,7 @@ var Engine = (function(global) {
             if (game.next != ''){
                 reset();
             }
+        // continuation if there is no time or restart
         } else {
             ctx.strokeText('Press Enter to restart', 256, 440);
             ctx.strokeText('or Space to continue', 256, 500);
@@ -279,6 +295,7 @@ var Engine = (function(global) {
                 reset();
             }
         }
+        // gems
         ctx.drawImage(Resources.get('images/Gem Green.png'), 70, 150);
         ctx.drawImage(Resources.get('images/Gem Blue.png'), 70, 200);
         ctx.drawImage(Resources.get('images/Gem Orange.png'), 70, 250);
