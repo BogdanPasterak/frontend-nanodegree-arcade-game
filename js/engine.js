@@ -65,6 +65,10 @@ var Engine = (function(global) {
      * game loop.
      */
     function init() {
+        global.sound_grab_gem = new Howl({ src: ['sound/grab_gem.mp3'] });
+        global.sound_extra_live = new Howl({ src: ['sound/extra_live.mp3'] });
+        global.sound_lose_live = new Howl({ src: ['sound/lose_live.mp3'] });
+        global.sound_next_level = new Howl({ src: ['sound/next_level.mp3'] });
         reset();
         initEnemies();
         lastTime = Date.now();
@@ -103,9 +107,11 @@ var Engine = (function(global) {
                 // if live
                 if (gem.sort == 3) {
                     game.live += (game.live < 3);
+                    sound_extra_live.play();
                 // if gem
                 } else {
                     game.gemsOGB[gem.sort]++;
+                    sound_grab_gem.play();
                 }
                 gems.delete(gem);
             }
@@ -132,6 +138,7 @@ var Engine = (function(global) {
 
     // loss of life
     function lossOfLife(){
+        sound_lose_live.play();
         stopTimer()
         game.live--;
         game.permit = false;
@@ -140,6 +147,7 @@ var Engine = (function(global) {
 
     // Next level
     function nextLevel() {
+        sound_next_level.play();
         stopTimer()
         game.permit = false;
         player.blink = 7;
