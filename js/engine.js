@@ -14,7 +14,6 @@
  */
 
 var Engine = (function(global) {
-    console.log('start');
     /* Predefine the variables we'll be using within this scope,
      * create the canvas element, grab the 2D context for that canvas
      * set the canvas elements height/width and add it to the DOM.

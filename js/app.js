@@ -1,3 +1,4 @@
+'use strict';
 // Variables used in the game
 const game = {
     widthCanvas: 505,
@@ -191,17 +192,17 @@ const integerToRoman = (num) => {
     if (typeof num !== 'number')
         return false;
 
-    var digits = String(+num).split(""),
-    key = [ "","C","CC","CCC","CD","D","DC","DCC","DCCC","CM",
-            "","X","XX","XXX","XL","L","LX","LXX","LXXX","XC",
-            "","I","II","III","IV","V","VI","VII","VIII","IX"],
-    roman_num = "",
+    const key = [ '','C','CC','CCC','CD','D','DC','DCC','DCCC','CM',
+        '','X','XX','XXX','XL','L','LX','LXX','LXXX','XC',
+        '','I','II','III','IV','V','VI','VII','VIII','IX'];
+    let digits = String(+num).split(''),
+        roman_num = '',
+        i = 3;
 
-    i = 3;
     while (i--) {
-        roman_num = (key[+digits.pop() + (i * 10)] || "") + roman_num;
+        roman_num = (key[+digits.pop() + (i * 10)] || '') + roman_num;
     }
-    return Array(+digits.join("") + 1).join("M") + roman_num;
+    return Array(+digits.join('') + 1).join('M') + roman_num;
 };
 
 // TODO: Change time to string , format '0:35'
@@ -280,19 +281,3 @@ const startBlink = () => {
         }, 150);
     }
 };
-
-// function that connects the audio element
-function sound(src) {
-    this.sound = document.createElement("audio");
-    this.sound.src = src;
-    this.sound.setAttribute("preload", "auto");
-    this.sound.setAttribute("controls", "none");
-    this.sound.style.display = "none";
-    document.body.appendChild(this.sound);
-    this.play = function(){
-        this.sound.play();
-    }
-    this.stop = function(){
-        this.sound.pause();
-    }
-}

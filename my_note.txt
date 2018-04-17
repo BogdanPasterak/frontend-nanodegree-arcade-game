@@ -1,0 +1,54 @@
+// Install gulp in my devDependencies
+
+npm install --save-dev gulp@next
+
+// create a gulpfile.js
+
+/*
+
+/*eslint-env node */
+
+var gulp = require('gulp');
+var sass = require('gulp-sass');
+var autoprefixer = require('gulp-autoprefixer');
+var browserSync = require('browser-sync').create();
+
+gulp.task('default', function () {
+    gulp.watch('sass/**/*.scss',['styles']);
+});
+
+gulp.task('styles', function() {
+    gulp.src('sass/**/*.scss')
+        .pipe(sass().on('error', sass.logError))
+        .pipe(autoprefixer({browsers: ['last 2 versions']}))
+        .pipe(gulp.dest('./css'));
+});
+
+browserSync.init({ server: './' });
+browserSync.stream();
+
+*/
+
+// Insatall gulp-sass
+
+npm install gulp-sass
+
+// Install gulp-autoprefixer
+
+npm install --save-dev gulp-autoprefixer
+
+// add Chrome Dev Workspaces
+
+// Install global browser-sync
+
+//npm install -g browser-sync
+npm i browser-sync --save
+
+//start
+
+browser-sync start --server --files "css/*.css"
+
+eslint --init
+// or copy .eslintrc.js
+
+npm install gulp-eslint
