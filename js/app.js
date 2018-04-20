@@ -1,6 +1,6 @@
 'use strict';
-// Variables used in the game
-const game = {
+// Variables used in the GAME inside singleton object
+const GAME = {
     widthCanvas: 505,
     level: 1,
     live: 3,
@@ -9,6 +9,10 @@ const game = {
     permit: true,       // can you play
     gemsOGB: [0, 0, 0], // array of gems
     next: '',           // key code
+    sound_grab_gem: new Howl({ src: ['sound/grab_gem.mp3'] }),
+    sound_extra_live: new Howl({ src: ['sound/extra_live.mp3'] }),
+    sound_lose_live: new Howl({ src: ['sound/lose_live.mp3'] }),
+    sound_next_level: new Howl({ src: ['sound/next_level.mp3'] }),
     blinkID: undefined, // Interval blinkings
     timerID: undefined  // Interval timer
 };
@@ -18,9 +22,9 @@ const Enemy = function( row = 6 ) {
     // Variables applied to each of our instances go here,
     // we've provided one for you to get started
     // Random speed (minimum 100) depends on the level ( + or - )
-    this.speed = (100 + (Math.random() * 10 * game.level)) * ((Math.random() > 0.5) ? 1 : -1);
+    this.speed = (100 + (Math.random() * 10 * GAME.level)) * ((Math.random() > 0.5) ? 1 : -1);
     // Starting off-screen position
-    this.x = (this.speed > 0) ? (-100 - Math.random() * 200) : (game.widthCanvas + Math.random() * 200);
+    this.x = (this.speed > 0) ? (-100 - Math.random() * 200) : (GAME.widthCanvas + Math.random() * 200);
     // 6 -> draw the row between 1 and 3
     if (row == 6 ) {
         row = ((Math.random() * 3) | 0 ) + 1;
@@ -45,11 +49,11 @@ Enemy.prototype.update = function(dt) {
     // all computers.
     this.x += this.speed * dt;
     // if outside the canvas
-    if (this.x > game.widthCanvas && this.speed > 0 ) {
+    if (this.x > GAME.widthCanvas && this.speed > 0 ) {
         this.x = -100 - Math.random() * 200;
     }
     if (this.x < -100 && this.speed < 0 ) {
-        this.x = game.widthCanvas + Math.random() * 200;
+        this.x = GAME.widthCanvas + Math.random() * 200;
     }
 };
 
@@ -62,24 +66,26 @@ Enemy.prototype.render = function() {
 Enemy.prototype.checkCollisions = function(player) {
     // different row !
     if (this.row != player.row)
-        return false;
+        return;
     // conflicting x position including transparent graphics
-    if (this.x + 98 > player.x + 19 && player.x + 81 > this.x + 2 && game.permit) {
+    if (GAME.permit && this.x + 98 > player.x + 19 && player.x + 81 > this.x + 2) {
         // the number of winks ( the player must have more odd numbers )
         this.blink = 14;
         player.blink = 17;
-        return true;
+        GAME.sound_lose_live.play();
+        stopTimer();
+        GAME.live--;
+        GAME.permit = false;
+        startBlink();
     }
-    // no collision !!
-    return false;
 };
 
 // Faster depending on the level
 Enemy.prototype.accelerate = function() {
     if (this.speed > 0) {
-        this.speed = 100 + (Math.random() * 10 * game.level);
+        this.speed = 100 + (Math.random() * 10 * GAME.level);
     } else {
-        this.speed = -100 - (Math.random() * 10 * game.level);
+        this.speed = -100 - (Math.random() * 10 * GAME.level);
     }
 };
 
@@ -89,6 +95,8 @@ const Player = function() {
     // moves on columns and rows (row from Enemy)
     this.col = 2;
     this.sprite = 'images/char-boy.png';
+    this.x = this.col * 101;
+    this.y = this.row * 83 - 20;
 };
 
 // Inheritance of the prototype
@@ -97,58 +105,94 @@ Player.prototype = Object.create(Enemy.prototype);
 // Own construktor
 Player.prototype.constructor = Player;
 
-// Overriding update
-Player.prototype.update = function() {
-    this.x = this.col * 101;
-    this.y = this.row * 83 - 20;
-};
-
 // Set on start position
 Player.prototype.restart = function() {
     this.row = 5;
     this.col = 2;
+    this.x = this.col * 101;
+    this.y = this.row * 83 - 20;
 };
 
 // Keyboard support, player moves
 Player.prototype.handleInput = function(way) {
     // if game
-    if (game.permit) {
+    if (GAME.permit) {
         startTimer();
-        if (way == 'up' && this.row > 0) {
-            this.row--;
-        } else if (way == 'down' && this.row < 5) {
-            this.row++;
-        } else if (way == 'left' && this.col > 0) {
-            this.col--;
-        } else if (way == 'right' && this.col < 4) {
-            this.col++;
+        switch(way) {
+        case 'up':
+            this.row -= (this.row > 0);
+            this.y = this.row * 83 - 20;
+            // If the player reached the water -> next level
+            if (this.row == 0 && GAME.permit) {
+                GAME.sound_next_level.play();
+                stopTimer();
+                GAME.permit = false;
+                player.blink = 7;
+                startBlink();
+                // accelerate Enemy
+                allEnemies.forEach(function(enemy) {
+                    enemy.accelerate();
+                });
+                // add one every 5 levels
+                if (GAME.level % 5 == 0) {
+                    allEnemies.push(new Enemy());
+                }
+                GAME.level++;
+            }
+            break;
+        case 'down':
+            this.row += (this.row < 5);
+            this.y = this.row * 83 - 20;
+            break;
+        case 'left':
+            this.col -= (this.col > 0);
+            this.x = this.col * 101;
+            break;
+        case 'right':
+            this.col += (this.col < 4);
+            this.x = this.col * 101;
         }
     // after game
     } else {
         if (way == 'space' || way == 'enter' ) {
-            game.next = way;
+            GAME.next = way;
         }
     }
 };
 
 // Gems class, including extra life
 const Gem = function() {
+    Player.call(this);
     const sprites = ['images/Gem Orange.png', 'images/Gem Blue.png', 'images/Gem Green.png', 'images/Heart.png'];
     // drawing of the object and position
     this.sort = (Math.random() < 0.4) + (Math.random() < 0.4) + (Math.random() < 0.4);
     this.sprite = sprites[this.sort];
     this.row = ((Math.random() * 4) | 0) +1;
     this.col = (Math.random() * 5) | 0;
+    this.x = this.col * 101 - 5 + (this.sort > 1) * 10;
+    this.y = this.row * 83 - 5 + (this.sort % 2 === 0) * 10;
 };
 
-// Render
-Gem.prototype.render = function() {
-    ctx.drawImage(Resources.get(this.sprite), this.col * 101, this.row * 83);
-};
+// Inheritance of the prototype
+Gem.prototype = Object.create(Player.prototype);
+
+// Own construktor
+Gem.prototype.constructor = Gem;
 
 // check if the player has taken
-Gem.prototype.checkTaking = function(player) {
-    return (player.row == this.row && player.col == this.col);
+Gem.prototype.update = function(player) {
+    if (player.row == this.row && player.col == this.col) {
+        // if live
+        if (this.sort == 3) {
+            GAME.live += (GAME.live < 3);
+            GAME.sound_extra_live.play();
+        // if gem
+        } else {
+            GAME.gemsOGB[this.sort]++;
+            GAME.sound_grab_gem.play();
+        }
+        gems.delete(this);
+    }
 };
 
 // Now instantiate your objects.
@@ -167,7 +211,7 @@ const initEnemies = () => {
         allEnemies.pop();
     }
     // minimum 3 enemies on 3 road, the rest randomly
-    for ( let i = 0; i < game.level + 2; i++) {
+    for ( let i = 0; i < GAME.level + 2; i++) {
         allEnemies.push( new Enemy((i < 3) ? i + 1 : 6));
     }
 };
@@ -207,23 +251,23 @@ const integerToRoman = (num) => {
 
 // TODO: Change time to string , format '0:35'
 const timeToString = () => {
-    let string = (game.time > 590) ? ((game.time / 600) | 0) + ':' : '0:';
-    string += (game.time % 600 < 100) ? '0' : '';
-    string += ((game.time % 600) / 10) | 0;
+    let string = (GAME.time > 590) ? ((GAME.time / 600) | 0) + ':' : '0:';
+    string += (GAME.time % 600 < 100) ? '0' : '';
+    string += ((GAME.time % 600) / 10) | 0;
 
     return string;
 };
 
 // TODO: Countdown to zero
 const startTimer = () => {
-    if (game.timerID == undefined ){
+    if (GAME.timerID == undefined ){
         // start countdown
-        game.timerID = setInterval(function() {
-            if (game.time > 0) {
-                game.time--;
+        GAME.timerID = setInterval(function() {
+            if (GAME.time > 0) {
+                GAME.time--;
             // if end time
-            } else if (game.time == 0 && game.permit) {
-                game.permit = false;
+            } else if (GAME.time == 0 && GAME.permit) {
+                GAME.permit = false;
                 player.blink = 7;
                 startBlink();
                 stopTimer();
@@ -231,27 +275,28 @@ const startTimer = () => {
             // add sometimes gem
             if (Math.random() < 0.07 / (gems.size + 1)) {
                 gems.add(new Gem());
+                //console.log(gems);
             }
         }, 100);
         // time is running
-        game.go = true;
+        GAME.go = true;
     }
 };
 
 // TODO: Stop counting
 const stopTimer = () => {
-    if (game.timerID != undefined) {
-        clearInterval(game.timerID);
-        game.timerID = undefined;
-        game.go = false;
+    if (GAME.timerID != undefined) {
+        clearInterval(GAME.timerID);
+        GAME.timerID = undefined;
+        GAME.go = false;
     }
 };
 
 // TODO: flash characters after a collision
 const startBlink = () => {
-    if (game.blinkID == undefined ){
+    if (GAME.blinkID == undefined ){
         // start Interval
-        game.blinkID = setInterval(function() {
+        GAME.blinkID = setInterval(function() {
             // they are blinking Enemy if they were in a collision
             allEnemies.forEach(function(enemy) {
                 if (enemy.blink) {
@@ -271,11 +316,11 @@ const startBlink = () => {
             } else {
                 player.sprite = 'images/char-boy.png';
                 player.restart();
-                clearInterval(game.blinkID);
-                game.blinkID = undefined;
+                clearInterval(GAME.blinkID);
+                GAME.blinkID = undefined;
                 // if he's still alive and he still has time
-                if (game.live >= 0 && game.time) {
-                    game.permit = true;
+                if (GAME.live >= 0 && GAME.time) {
+                    GAME.permit = true;
                 }
             }
         }, 150);

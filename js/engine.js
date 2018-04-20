@@ -64,10 +64,6 @@ var Engine = (function(global) {
      * game loop.
      */
     function init() {
-        global.sound_grab_gem = new Howl({ src: ['sound/grab_gem.mp3'] });
-        global.sound_extra_live = new Howl({ src: ['sound/extra_live.mp3'] });
-        global.sound_lose_live = new Howl({ src: ['sound/lose_live.mp3'] });
-        global.sound_next_level = new Howl({ src: ['sound/next_level.mp3'] });
         reset();
         initEnemies();
         lastTime = Date.now();
@@ -95,37 +91,15 @@ var Engine = (function(global) {
      * render methods.
      */
     function updateEntities(dt) {
-        player.update();
-        // If the player reached the water
-        if (player.row == 0 && game.permit) {
-            nextLevel();
-        }
         // Collect gems
         gems.forEach(function(gem){
-            if (gem.checkTaking(player)) {
-                // if live
-                if (gem.sort == 3) {
-                    game.live += (game.live < 3);
-                    sound_extra_live.play();
-                // if gem
-                } else {
-                    game.gemsOGB[gem.sort]++;
-                    sound_grab_gem.play();
-                }
-                gems.delete(gem);
-            }
+            gem.update(player);
         });
-        collision = false;
         // checkCollisions();
         allEnemies.forEach(function(enemy) {
             enemy.update(dt);
-            collision = collision || enemy.checkCollisions(player);
-            // one collision is enough !!
+            enemy.checkCollisions(player);
         });
-        // if any collision
-        if (collision && game.permit) {
-            lossOfLife();
-        }
     }
 
     // Stop all enemy for test collision
@@ -133,33 +107,6 @@ var Engine = (function(global) {
         allEnemies.forEach(function(enemy) {
             enemy.speed = 0;
         });
-    }
-
-    // loss of life
-    function lossOfLife(){
-        sound_lose_live.play();
-        stopTimer()
-        game.live--;
-        game.permit = false;
-        startBlink();
-    }
-
-    // Next level
-    function nextLevel() {
-        sound_next_level.play();
-        stopTimer()
-        game.permit = false;
-        player.blink = 7;
-        startBlink();
-        // accelerate Enemy
-        allEnemies.forEach(function(enemy) {
-            enemy.accelerate();
-        });
-        // add one every 5 levels
-        if (game.level % 5 == 0) {
-            allEnemies.push(new Enemy());
-        }
-        game.level++;
     }
 
     /* This function initially draws the "game level", it will then call
@@ -209,7 +156,7 @@ var Engine = (function(global) {
         renderEntities();
 
         // if end game
-        if (! game.permit && game.blinkID == undefined) {
+        if (! GAME.permit && GAME.blinkID == undefined) {
             renderScore();
         }
     }
@@ -236,7 +183,7 @@ var Engine = (function(global) {
     // TODO: Displays the results of the game
     function renderInfo() {
         // if time go ..
-        if (game.go){
+        if (GAME.go){
             ctx.strokeStyle = 'rgba(180, 50, 210, 1.0)';
             ctx.fillStyle = 'rgba(180, 50, 210, 0.2)';
             ctx.shadowColor = 'rgba(100, 0, 130, 0.6)';
@@ -257,7 +204,7 @@ var Engine = (function(global) {
         ctx.fillRect(325, 4, 175, 40);
         ctx.strokeRect(325, 4, 175, 40);
         // live
-        for (let i = 0; i < game.live; i++) {
+        for (let i = 0; i < GAME.live; i++) {
             ctx.drawImage(Resources.get('images/Heart-mini.png'), 10 + i * 35, 9);
         }
         // level and time
@@ -266,7 +213,7 @@ var Engine = (function(global) {
         ctx.strokeStyle = 'rgb(0, 0, 0)';
         ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
         ctx.textAlign = 'center';
-        ctx.strokeText("Level: " + integerToRoman(game.level), 223, 33);
+        ctx.strokeText("Level: " + integerToRoman(GAME.level), 223, 33);
         ctx.strokeText("Time: " + timeToString(), 415, 33);
     }
 
@@ -286,19 +233,19 @@ var Engine = (function(global) {
         ctx.lineWidth = 2;
         ctx.font = '45px serif';
         ctx.strokeText('Your collection:', 256, 200);
-        if (game.live == -1) {
+        if (GAME.live == -1) {
             ctx.strokeText('Try again', 256, 440);
             ctx.strokeText('Press Space or Enter', 256, 500);
-            if (game.next != ''){
+            if (GAME.next != ''){
                 reset();
             }
         // continuation if there is no time or restart
         } else {
             ctx.strokeText('Press Enter to restart', 256, 440);
             ctx.strokeText('or Space to continue', 256, 500);
-            if (game.next == 'space') {
+            if (GAME.next == 'space') {
                 continuation();
-            } else if (game.next == 'enter') {
+            } else if (GAME.next == 'enter') {
                 reset();
             }
         }
@@ -310,9 +257,9 @@ var Engine = (function(global) {
         ctx.font = '25px serif';
         ctx.lineWidth = 1.5;
         ctx.textAlign = 'start';
-        ctx.strokeText('Green  Gems:  ' + game.gemsOGB[1], 180, 250);
-        ctx.strokeText('Blue   Gems:   ' + game.gemsOGB[2], 180, 300);
-        ctx.strokeText('Orange Gems: ' + game.gemsOGB[0], 180, 350);
+        ctx.strokeText('Green  Gems:  ' + GAME.gemsOGB[1], 180, 250);
+        ctx.strokeText('Blue   Gems:   ' + GAME.gemsOGB[2], 180, 300);
+        ctx.strokeText('Orange Gems: ' + GAME.gemsOGB[0], 180, 350);
 
     }
 
@@ -323,19 +270,19 @@ var Engine = (function(global) {
      */
     function reset() {
         continuation();
-        game.level = 1;
-        game.live = 3;
-        game.time = 3 * 60 * 10;
-        game.gemsOGB = [0, 0, 0];
+        GAME.level = 1;
+        GAME.live = 3;
+        GAME.time = 3 * 60 * 10;
+        GAME.gemsOGB = [0, 0, 0];
         initEnemies();
         gems.clear();
     }
 
     function continuation() {
-        game.time = 2 * 60 * 10;
-        game.go = false;
-        game.permit = true;
-        game.next = '';
+        GAME.time = 2 * 60 * 10;
+        GAME.go = false;
+        GAME.permit = true;
+        GAME.next = '';
     }
 
     /* Go ahead and load all of the images we know we're going to need to

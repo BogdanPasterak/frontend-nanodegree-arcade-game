@@ -6,8 +6,11 @@ var autoprefixer = require('gulp-autoprefixer');
 var browserSync = require('browser-sync').create();
 var eslint = require('gulp-eslint');
 
-gulp.task('default', function () {
-    gulp.watch('sass/**/*.scss',['styles']);
+gulp.task('default',  function () { //['styles', 'lint'],
+    //gulp.watch('sass/**/*.scss',['styles']);
+    //gulp.watch('js/**/*.js', ['lint']);
+
+    browserSync.init({ server: './' });
 });
 
 gulp.task('styles', function() {
@@ -17,10 +20,15 @@ gulp.task('styles', function() {
         .pipe(gulp.dest('./css'));
 });
 
-browserSync.init({ server: './' });
+/*
+gulp.task('default', gulp.series('del', function() {
+    // default task code here
+}));
+*/
+
 browserSync.stream();
 
-gulp.task('lint', () => {
+gulp.task('lint', function() {
     // ESLint ignores files with "node_modules" paths.
     // So, it's best to have gulp ignore the directory as well.
     // Also, Be sure to return the stream from the task;
