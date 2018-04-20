@@ -1,4 +1,5 @@
 'use strict';
+
 // Variables used in the GAME inside singleton object
 const GAME = {
     widthCanvas: 505,
@@ -27,7 +28,7 @@ const Enemy = function( row = 6 ) {
     this.x = (this.speed > 0) ? (-100 - Math.random() * 200) : (GAME.widthCanvas + Math.random() * 200);
     // 6 -> draw the row between 1 and 3
     if (row == 6 ) {
-        row = ((Math.random() * 3) | 0 ) + 1;
+        row = (Math.floor(Math.random() * 3)) + 1;
     }
     // path
     this.row = row;
@@ -167,8 +168,8 @@ const Gem = function() {
     // drawing of the object and position
     this.sort = (Math.random() < 0.4) + (Math.random() < 0.4) + (Math.random() < 0.4);
     this.sprite = sprites[this.sort];
-    this.row = ((Math.random() * 4) | 0) +1;
-    this.col = (Math.random() * 5) | 0;
+    this.row = Math.floor(Math.random() * 4) +1;
+    this.col = Math.floor(Math.random() * 5);
     this.x = this.col * 101 - 5 + (this.sort > 1) * 10;
     this.y = this.row * 83 - 5 + (this.sort % 2 === 0) * 10;
 };
@@ -198,7 +199,7 @@ Gem.prototype.update = function(player) {
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
-const allEnemies = new Array();
+const allEnemies = [];
 
 const player = new Player();
 
@@ -251,22 +252,22 @@ const integerToRoman = (num) => {
 
 // TODO: Change time to string , format '0:35'
 const timeToString = () => {
-    let string = (GAME.time > 590) ? ((GAME.time / 600) | 0) + ':' : '0:';
+    let string = (GAME.time > 590) ? Math.floor(GAME.time / 600) + ':' : '0:';
     string += (GAME.time % 600 < 100) ? '0' : '';
-    string += ((GAME.time % 600) / 10) | 0;
+    string += Math.floor((GAME.time % 600) / 10);
 
     return string;
 };
 
 // TODO: Countdown to zero
 const startTimer = () => {
-    if (GAME.timerID == undefined ){
+    if (GAME.timerID === undefined ){
         // start countdown
         GAME.timerID = setInterval(function() {
             if (GAME.time > 0) {
                 GAME.time--;
             // if end time
-            } else if (GAME.time == 0 && GAME.permit) {
+            } else if (GAME.time === 0 && GAME.permit) {
                 GAME.permit = false;
                 player.blink = 7;
                 startBlink();
@@ -285,7 +286,7 @@ const startTimer = () => {
 
 // TODO: Stop counting
 const stopTimer = () => {
-    if (GAME.timerID != undefined) {
+    if (GAME.timerID !== undefined) {
         clearInterval(GAME.timerID);
         GAME.timerID = undefined;
         GAME.go = false;
@@ -294,7 +295,7 @@ const stopTimer = () => {
 
 // TODO: flash characters after a collision
 const startBlink = () => {
-    if (GAME.blinkID == undefined ){
+    if (GAME.blinkID === undefined ){
         // start Interval
         GAME.blinkID = setInterval(function() {
             // they are blinking Enemy if they were in a collision
